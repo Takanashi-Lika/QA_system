@@ -1,6 +1,6 @@
 # 电商平台 + RAG 智能客服
 
-轻量级企业电商平台，覆盖**用户→商品→订单→支付→物流→售后**完整交易闭环，集成 **RAG 智能客服**（FAQ 知识库检索）。通过 Docker Compose 一键部署。
+轻量级企业电商平台，覆盖**用户→商品→订单→支付→物流→售后**完整交易闭环，集成 **RAG 智能客服**（FAQ 知识库检索 + LLM 生成回复）。通过 Docker Compose 一键部署。
 
 ---
 
@@ -10,34 +10,35 @@
 浏览器 :80
     │
     ▼
-┌─────────────────────────────────────────────┐
-│  Nginx (反向代理)                             │
-│  /api/shop/*  →  shop-service:8001          │
-│  /api/ai/*    →  ai-service (预留)           │
-└──────────────┬──────────────────────────────┘
-               │
-    ┌──────────┴──────────┐
-    ▼                     ▼
-┌───────────┐    ┌────────────────┐
-│  Redis 7  │    │  PostgreSQL 16 │
-│  缓存      │    │  + pgvector    │
-│  :6379    │    │  :5432         │
-└───────────┘    └────────────────┘
-         ▲                 ▲
-         │    ┌────────────┘
-         │    │
-┌────────┴────┴────────┐
-│  shop-service :8001  │
-│  FastAPI + Python    │
-│  + APScheduler       │
-│  + JWT 认证          │
-└──────────────────────┘
+┌──────────────────────────────────────────────────┐
+│  Nginx (反向代理)                                  │
+│  /api/shop/*  →  shop-service:8001               │
+│  /api/ai/*    →  rag-service:8000                │
+└──────────┬──────────────────┬────────────────────┘
+           │                  │
+    ┌──────┴──────┐    ┌──────┴──────┐
+    ▼             ▼    ▼             ▼
+┌───────────┐ ┌────────────────┐ ┌─────────────┐
+│  Redis 7  │ │  PostgreSQL 16 │ │ RAG API     │
+│  缓存      │ │  + pgvector    │ │ FAQ检索+LLM │
+│  :6379    │ │  :5432         │ │ :8000       │
+└───────────┘ └────────────────┘ └─────────────┘
+         ▲            ▲
+         │  ┌─────────┘
+         │  │
+┌────────┴──┴────────┐
+│  shop-service :8001│
+│  FastAPI + Python  │
+│  + APScheduler     │
+│  + JWT 认证        │
+└────────────────────┘
 ```
 
 | 容器 | 端口 | 用途 |
 |------|------|------|
 | **nginx** | 80 | 统一入口、反向代理、CORS |
 | **shop-service** | 8001 | 电商业务 API（FastAPI） |
+| **rag-service** | 8000 | RAG FAQ 检索 + LLM 生成回复 |
 | **postgres** | 5432 | 关系数据 + 向量数据 |
 | **redis** | 6379 | 商品详情/热门/分类树缓存 |
 
@@ -54,7 +55,7 @@
 | 定时任务 | APScheduler（超时订单自动取消） |
 | 认证 | JWT（PyJWT）+ bcrypt 密码加密 |
 | RAG 检索 | ChromaDB + sentence-transformers + BM25 + jieba |
-| 部署 | Docker Compose（4 容器） |
+| 部署 | Docker Compose（5 容器） |
 
 ---
 
@@ -66,26 +67,33 @@
 - 下载：[docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/)
 - Windows 用户可能需要先启用 WSL2（安装程序会引导你）
 
-### 1. 克隆项目（或解压到本地）
+### 1. 克隆项目
 
 ```bash
 cd My_LLM_Project
 ```
 
-### 2. 一键启动
+### 2. 配置环境变量
+
+```bash
+cp .env.example .env
+# 编辑 .env，填入你的 MODEL_API_KEY（DeepSeek API Key）
+```
+
+### 3. 一键启动
 
 ```bash
 docker compose up -d
 ```
 
-首次运行会拉取镜像（约 5 分钟），之后秒启。启动后 4 个容器全部 Running 即为成功：
+首次运行会拉取镜像并构建（约 5-10 分钟）。启动后 5 个容器全部 Running：
 
 ```bash
 docker compose ps
-# 应看到 nginx、shop-service、postgres、redis 全部 Up
+# 应看到 nginx、shop-service、rag-service、postgres、redis 全部 Up
 ```
 
-### 3. 运行端到端测试
+### 4. 运行端到端测试
 
 ```bash
 cd shop-service
@@ -107,23 +115,50 @@ python test_shop.py
 ============================================================
 ```
 
-### 4. 打开 API 文档（Swagger）
+### 5. 打开 API 文档
 
-浏览器打开：**http://localhost/docs**
-
-每个端点都能在线填参数、发请求、看响应——零代码调试。
+| 服务 | Swagger UI |
+|------|-----------|
+| 电商服务 | **http://localhost/docs** |
+| RAG 智能客服 | **http://localhost:8000/docs** |
 
 ---
 
-## 🧪 手动测试常用 API
+## 🤖 RAG 智能客服 API
 
-### 预置账号
+### 接口
 
-| 角色 | 邮箱 | 密码 |
+| 端点 | 方法 | 说明 |
 |------|------|------|
-| 管理员 | `admin@shop.local` | `admin123` |
+| `/api/chat` | POST | FAQ 检索 + LLM 生成回复 |
+| `/api/search` | POST | 纯 FAQ 检索（不调 LLM） |
+| `/api/stats` | GET | 索引统计 |
+| `/health` | GET | 健康检查 |
 
-### 快速走通购物流程
+### 调用示例
+
+```bash
+# FAQ 问答（检索 + LLM 生成）
+curl -X POST http://localhost/api/ai/chat \
+  -H "Content-Type: application/json" \
+  -d '{"question":"门锁没电了怎么办"}'
+
+# 纯检索（不调 LLM，不花钱）
+curl -X POST http://localhost/api/ai/search \
+  -H "Content-Type: application/json" \
+  -d '{"question":"摄像头怎么安装"}'
+```
+
+也可以通过 Nginx 统一入口：
+```bash
+curl -X POST http://localhost/api/ai/chat \
+  -H "Content-Type: application/json" \
+  -d '{"question":"售后怎么申请"}'
+```
+
+---
+
+## 🧪 快速走通购物流程
 
 ```bash
 # 1. 注册用户
@@ -131,16 +166,15 @@ curl -X POST http://localhost/c-endpoint/register \
   -H "Content-Type: application/json" \
   -d '{"email":"test@test.com","password":"123456","nickname":"张三"}'
 
-# 2. 登录（获取 Token）
+# 2. 登录
 curl -X POST http://localhost/c-endpoint/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@test.com","password":"123456"}'
-# → 复制返回的 token
 
-# 3. 设为环境变量
+# 3. 复制返回的 token，设为环境变量
 TOKEN="eyJhbGci..."
 
-# 4. 查看分类树
+# 4. 查看热门商品
 curl http://localhost/c-endpoint/products/hot
 
 # 5. 加入购物车
@@ -155,7 +189,7 @@ curl -X POST http://localhost/c-endpoint/orders/ \
   -H "Content-Type: application/json" \
   -d '{"address":"广东省深圳市南山区"}'
 
-# 7. 支付（假设返回的订单 ID 是 1）
+# 7. 支付
 curl -X POST http://localhost/c-endpoint/orders/1/pay \
   -H "Authorization: Bearer $TOKEN"
 
@@ -163,6 +197,12 @@ curl -X POST http://localhost/c-endpoint/orders/1/pay \
 curl "http://localhost/c-endpoint/logistics?order_id=1" \
   -H "Authorization: Bearer $TOKEN"
 ```
+
+### 预置账号
+
+| 角色 | 邮箱 | 密码 |
+|------|------|------|
+| 管理员 | `admin@shop.local` | `admin123` |
 
 ---
 
@@ -173,37 +213,37 @@ My_LLM_Project/
 ├── shop-service/                 # 电商服务（核心）
 │   ├── main.py                  # FastAPI 入口 + 生命周期管理
 │   ├── apps/                    # API 路由层
-│   │   ├── c_endpoint/          #   C 端：user / product / cart / order / logistics / after_sale
-│   │   ├── b_endpoint/          #   B 端：category / product / order / after_sale
-│   │   ├── internal/            #   内部接口（供 AI 服务调用）
-│   │   └── common/              #   公共：JWT 认证
+│   │   ├── c_endpoint/          #   C 端：user/product/cart/order/logistics/after_sale
+│   │   ├── b_endpoint/          #   B 端：category/product/order/after_sale
+│   │   ├── internal/            #   内部接口
+│   │   └── common/              #   JWT 认证
 │   ├── domain/                  # 业务逻辑层
-│   │   └── user / category / product / cart / order / logistics / after_sale
-│   ├── infrastructure/          # 基础设施
-│   │   ├── database.py         #   ThreadedConnectionPool 连接池
-│   │   ├── redis_client.py     #   Cache-Aside 缓存客户端
-│   │   └── scheduler.py        #   APScheduler 定时任务
-│   ├── middleware/              # 中间件（RequestID / 请求日志 / 异常处理）
-│   ├── common/                  # 公共模块（异常树 / ContextVar / Logger）
+│   ├── infrastructure/          # 基础设施（DB/Redis/Scheduler）
+│   ├── middleware/              # 中间件（RequestID/日志/异常处理）
+│   ├── common/                  # 公共模块（异常树/ContextVar/Logger）
 │   ├── Dockerfile
 │   ├── requirements.txt
 │   └── test_shop.py            # 端到端集成测试
 │
 ├── rag/                         # RAG 检索模块
-│   ├── store.py                #   向量存储（ChromaDB）
-│   ├── embedding.py            #   向量化（sentence-transformers）
+│   ├── store.py                #   向量存储 + 混合检索
+│   ├── embedding.py            #   向量化（local=本地 / api=远程）
 │   ├── bm25.py                 #   BM25 关键词检索
 │   └── parser.py               #   FAQ 文档解析
 │
-├── model/                       # LLM 客户端
-│   └── client.py               #   OpenAI 兼容接口
+├── model/                       # LLM 客户端（OpenAI 兼容接口）
+├── retriever/                   # 检索编排层（查询改写 + RAG → LLM）
+├── api/                         # RAG API 服务（FastAPI）
+│   ├── routes.py               #   /api/chat 端点
+│   └── main.py                 #   独立入口
 │
 ├── rag_resource/                # FAQ 知识库文档（5 个产品线）
 ├── nginx/nginx.conf             # Nginx 反向代理配置
 ├── init.sql                     # 数据库建表 + 种子数据
-├── docker-compose.yml           # 4 容器编排
-├── .env                         # 环境变量
-├── rag_cli.py                   # RAG CLI 工具（临时）
+├── docker-compose.yml           # 5 容器编排
+├── Dockerfile                   # RAG API 镜像
+├── .env.example                 # 环境变量模板
+├── rag_cli.py                   # RAG CLI 工具
 └── 开发文档/                     # 需求/技术/知识文档
 ```
 
@@ -231,7 +271,7 @@ My_LLM_Project/
 | `/c-endpoint/logistics` | GET | 物流查询 | ✓ |
 | `/c-endpoint/after-sales` | GET/POST | 售后申请/查询 | ✓ |
 
-### B 端（管理员，需 `role=admin`）
+### B 端（管理员）
 
 | 端点 | 方法 | 描述 |
 |------|------|------|
@@ -241,9 +281,8 @@ My_LLM_Project/
 | `/b-endpoint/products/{id}` | PUT | 编辑商品 |
 | `/b-endpoint/products/{id}/status` | PATCH | 上下架 |
 | `/b-endpoint/orders/` | GET | 全部订单 |
-| `/b-endpoint/after-sales/` | GET | 全部售后申请 |
 
-### 内部接口（AI 服务调用，需 `X-Internal-Token`）
+### 内部接口（需 `X-Internal-Token`）
 
 | 端点 | 描述 |
 |------|------|
@@ -255,11 +294,17 @@ My_LLM_Project/
 | `/internal/products/{id}` | 商品详情 |
 | `/internal/users/{id}` | 用户信息 |
 
+### RAG 智能客服
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/api/ai/chat` | POST | FAQ 检索 + LLM 生成回复 |
+| `/api/ai/search` | POST | 纯 FAQ 检索（不调 LLM） |
+| `/api/ai/stats` | GET | 索引统计 |
+
 ---
 
 ## 🎯 RAG 检索 CLI
-
-项目根目录的 `rag_cli.py` 提供独立的 FAQ 检索命令行工具：
 
 ```bash
 cd My_LLM_Project
@@ -268,7 +313,7 @@ pip install -r requirements.txt
 # 构建索引
 python rag_cli.py build --force
 
-# 交互式检索（默认 hybrid 模式）
+# 交互式检索
 python rag_cli.py interactive
 
 # 单次检索
@@ -281,36 +326,33 @@ python rag_cli.py search "门锁没电了怎么办" --mode hybrid
 
 ## 🔧 开发模式（不依赖 Docker）
 
-如果你只想调试 `shop-service`，可以只用 Docker 跑数据库，服务在本地启动：
-
 ```bash
 # 只启动 postgres + redis
 docker compose up -d postgres redis
 
-# 本地装依赖并启动
+# 终端1：启动电商服务
 cd shop-service
 pip install -r requirements.txt
 uvicorn main:app --reload --host 0.0.0.0 --port 8001
-```
 
-访问 http://localhost:8001/docs 开始调试。改代码自动热重载（`--reload`）。
+# 终端2：启动 RAG API
+cd ..
+pip install -r requirements.txt
+uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
+```
 
 ---
 
 ## 🔍 日志查看
 
 ```bash
-# 查看 shop-service 日志
 docker logs shop-service -f --tail 50
-
-# 查看 Nginx 日志
+docker logs rag-service -f --tail 50
 docker logs nginx -f --tail 50
 
 # 按 request_id 追踪单次请求
 docker logs shop-service 2>&1 | grep "abc12345"
 ```
-
-日志格式：`时间 | 级别 | request_id | 模块:行号 | 消息`
 
 ---
 
@@ -320,38 +362,30 @@ docker logs shop-service 2>&1 | grep "abc12345"
 <summary><b>Docker 容器启动失败？</b></summary>
 
 ```bash
-# 清空旧容器和卷，重新启动
 docker compose down -v
 docker compose up -d
 ```
 </details>
 
 <details>
-<summary><b>测试脚本报连接错误？</b></summary>
+<summary><b>RAG 服务调 LLM 太花钱？</b></summary>
 
-确保容器已启动且端口未被占用：
-```bash
-docker compose ps                  # 确认 4 个容器 Up
-curl http://localhost:8001/health  # 确认服务响应
-```
+用 `/api/ai/search` 端点代替 `/api/ai/chat`，只做检索不调 LLM，零费用。
+也可以换便宜模型：`.env` 中 `MODEL_NAME=deepseek-chat`。
 </details>
 
 <details>
 <summary><b>Windows 端口 80 被占用？</b></summary>
 
-修改 `docker-compose.yml` 中 nginx 的端口映射：
-```yaml
-ports:
-  - "8080:80"   # 改为 8080
-```
+修改 `docker-compose.yml` 中 nginx 的端口映射：`"8080:80"`。
 </details>
 
 <details>
 <summary><b>想重置数据库？</b></summary>
 
 ```bash
-docker compose down -v   # -v 会删除数据卷（所有数据丢失）
-docker compose up -d     # 重新启动，init.sql 会重新建表
+docker compose down -v
+docker compose up -d
 ```
 </details>
 

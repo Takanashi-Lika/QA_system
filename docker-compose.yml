@@ -7,6 +7,7 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - shop-service
+      - rag-service
     logging:
       driver: json-file
       options:
@@ -26,6 +27,35 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  rag-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - MODEL_BASE_URL=${MODEL_BASE_URL:-https://api.deepseek.com/v1}
+      - MODEL_API_KEY=${MODEL_API_KEY:-}
+      - MODEL_NAME=${MODEL_NAME:-deepseek-chat}
+      - EMBEDDING_MODEL_NAME=${EMBEDDING_MODEL_NAME:-all-MiniLM-L6-v2}
+      - RAG_RESOURCE_DIR=rag_resource
+      - RAG_DB_DIR=rag_db
+      - RAG_COLLECTION_NAME=faq
+      - RAG_TOP_K=${RAG_TOP_K:-5}
+      - RAG_BM25_K1=${RAG_BM25_K1:-1.5}
+      - RAG_BM25_B=${RAG_BM25_B:-0.75}
+      - RETRIEVER_MODE=${RETRIEVER_MODE:-hybrid}
+      - RETRIEVER_RRF_K=${RETRIEVER_RRF_K:-60}
+      - API_PORT=8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./rag_resource:/app/rag_resource:ro
+      - ragdb:/app/rag_db
     logging:
       driver: json-file
       options:
@@ -64,3 +94,4 @@ services:
 volumes:
   pgdata:
   redisdata:
+  ragdb:
