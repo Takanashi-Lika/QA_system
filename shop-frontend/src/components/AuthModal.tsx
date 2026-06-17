@@ -19,7 +19,7 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
       }
       const r = await api.login(email, password);
       if (r.code !== 0) { setError(r.message); return; }
-      login(r.data.token, { user_id: r.data.user.id, email: r.data.user.email, role: r.data.user.role });
+      login(r.data.token, { user_id: r.data.user.id ?? r.data.user?.id, email: r.data.user.email ?? r.data.user?.email, role: r.data.user.role });
       onClose();
     } catch {
       setError("网络错误");
@@ -27,24 +27,32 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" onClick={onClose}>
-      <div className="bg-white rounded-2xl p-8 w-96 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-xl font-bold mb-6">{mode === "login" ? "登录" : "注册"}</h2>
-        {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
-        <div className="space-y-4">
-          <input className="w-full px-4 py-2 border rounded-lg text-sm" placeholder="邮箱" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <input className="w-full px-4 py-2 border rounded-lg text-sm" type="password" placeholder="密码" value={password} onChange={(e) => setPassword(e.target.value)} />
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center animate-fade-in" onClick={onClose}>
+      <div className="bg-white rounded-3xl p-8 w-[420px] shadow-2xl animate-scale-in" onClick={(e) => e.stopPropagation()}>
+        <div className="text-center mb-8">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1a1a2e] to-[#e94560] flex items-center justify-center text-white text-xl font-extrabold mx-auto mb-4">
+            ZH
+          </div>
+          <h2 className="text-2xl font-extrabold text-[#1a1a2e]">{mode === "login" ? "欢迎回来" : "创建账号"}</h2>
+          <p className="text-sm text-gray-400 mt-1">{mode === "login" ? "登录你的智居账号" : "开启智能家居之旅"}</p>
+        </div>
+        {error && (
+          <div className="mb-4 px-4 py-2.5 bg-red-50 border border-red-100 rounded-2xl text-red-500 text-sm">{error}</div>
+        )}
+        <div className="space-y-3.5">
+          <input className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm outline-none focus:bg-white focus:border-[#1a1a2e]/20 focus:ring-4 focus:ring-[#1a1a2e]/5 transition-all" placeholder="邮箱地址" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm outline-none focus:bg-white focus:border-[#1a1a2e]/20 focus:ring-4 focus:ring-[#1a1a2e]/5 transition-all" type="password" placeholder="密码" value={password} onChange={(e) => setPassword(e.target.value)} />
           {mode === "register" && (
-            <input className="w-full px-4 py-2 border rounded-lg text-sm" placeholder="昵称" value={nickname} onChange={(e) => setNickname(e.target.value)} />
+            <input className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm outline-none focus:bg-white focus:border-[#1a1a2e]/20 focus:ring-4 focus:ring-[#1a1a2e]/5 transition-all" placeholder="昵称" value={nickname} onChange={(e) => setNickname(e.target.value)} />
           )}
-          <button onClick={submit} className="w-full py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700">
-            {mode === "login" ? "登录" : "注册"}
+          <button onClick={submit} className="w-full py-3 bg-gradient-to-r from-[#1a1a2e] to-[#e94560] text-white rounded-2xl font-semibold text-sm hover:shadow-lg hover:shadow-[#e94560]/25 transition-all duration-300 active:scale-[0.98]">
+            {mode === "login" ? "登 录" : "注 册"}
           </button>
         </div>
-        <p className="text-sm text-gray-400 mt-4 text-center">
+        <p className="text-sm text-gray-400 mt-6 text-center">
           {mode === "login" ? "还没有账号？" : "已有账号？"}
-          <button className="text-blue-600 ml-1" onClick={() => setMode(mode === "login" ? "register" : "login")}>
-            {mode === "login" ? "去注册" : "去登录"}
+          <button className="text-[#e94560] font-semibold ml-1 hover:underline" onClick={() => setMode(mode === "login" ? "register" : "login")}>
+            {mode === "login" ? "立即注册" : "去登录"}
           </button>
         </p>
       </div>

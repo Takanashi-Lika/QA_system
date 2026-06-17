@@ -26,6 +26,12 @@ interface CartItem {
 
 type Tab = "home" | "orders" | "ai";
 
+const TABS: { key: Tab; icon: string; label: string }[] = [
+  { key: "home", icon: "🏠", label: "首页" },
+  { key: "orders", icon: "📋", label: "我的订单" },
+  { key: "ai", icon: "🤖", label: "AI助手" },
+];
+
 export default function App() {
   const { user } = useAuth();
   const [tab, setTab] = useState<Tab>("home");
@@ -53,11 +59,8 @@ export default function App() {
   };
 
   const updateQty = async (productId: number, qty: number) => {
-    if (qty <= 0) {
-      await api.removeFromCart(productId);
-    } else {
-      await api.updateCartItem(productId, qty);
-    }
+    if (qty <= 0) await api.removeFromCart(productId);
+    else await api.updateCartItem(productId, qty);
     loadCart();
   };
 
@@ -80,65 +83,38 @@ export default function App() {
     }
   };
 
-  const search = async (kw: string) => {
+  const search = (kw: string) => {
     setTab("home");
-    const r = await api.getProducts({ keyword: kw });
-    if (r.code === 0) {
-      const items = Array.isArray(r.data) ? r.data : (r.data?.items || []);
-      setDetailProduct(items[0] || null);
-    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar
-        cartCount={cartItems.length}
-        onOpenCart={() => setCartOpen(true)}
-        onOpenOrders={() => setTab("orders")}
-        onSearch={search}
-      />
+    <div className="min-h-screen">
+      <Navbar cartCount={cartItems.length} onOpenCart={() => setCartOpen(true)} onOpenOrders={() => setTab("orders")} onSearch={search} />
 
-      <div className="flex border-b bg-white">
-        {(["home", "orders", "ai"] as Tab[]).map((t) => (
-          <button
-            key={t}
-            className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-              tab === t ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-            onClick={() => setTab(t)}
-          >
-            {{ home: "🏠 首页", orders: "📋 我的订单", ai: "🤖 AI客服" }[t]}
-          </button>
-        ))}
-      </div>
+      <div className="max-w-7xl mx-auto px-6 pt-4 pb-20">
+        <div className="flex items-center gap-1 mb-6 bg-white/60 backdrop-blur rounded-2xl p-1.5 w-fit border border-gray-50 shadow-sm">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                tab === t.key
+                  ? "bg-gradient-to-r from-[#1a1a2e] to-[#e94560] text-white shadow-md"
+                  : "text-gray-500 hover:text-[#1a1a2e] hover:bg-gray-50"
+              }`}
+              onClick={() => setTab(t.key)}
+            >
+              <span className="mr-1.5">{t.icon}</span>{t.label}
+            </button>
+          ))}
+        </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        {tab === "home" && (
-          <HomeTab onDetail={(p) => setDetailProduct(p)} onAddCart={addToCart} />
-        )}
+        {tab === "home" && <HomeTab onDetail={(p) => setDetailProduct(p)} onAddCart={addToCart} />}
         {tab === "orders" && <OrdersTab />}
         {tab === "ai" && <AiChatTab />}
       </div>
 
-      <CartDrawer
-        open={cartOpen}
-        items={cartItems}
-        total={cartTotal}
-        onClose={() => setCartOpen(false)}
-        onUpdateQty={updateQty}
-        onRemove={removeFromCart}
-        onCheckout={checkout}
-      />
-
-      {detailProduct && (
-        <ProductDetail
-          product={detailProduct}
-          cartItems={cartItems}
-          onClose={() => setDetailProduct(null)}
-          onAddCart={addToCart}
-          onUpdateQty={updateQty}
-        />
-      )}
+      <CartDrawer open={cartOpen} items={cartItems} total={cartTotal} onClose={() => setCartOpen(false)} onUpdateQty={updateQty} onRemove={removeFromCart} onCheckout={checkout} />
+      {detailProduct && <ProductDetail product={detailProduct} cartItems={cartItems} onClose={() => setDetailProduct(null)} onAddCart={addToCart} onUpdateQty={updateQty} />}
     </div>
   );
 }

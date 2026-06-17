@@ -4,7 +4,38 @@ interface Product {
   price: number;
   stock: number;
   description?: string;
-  image_url?: string;
+}
+
+const EMOJI_MAP: Record<string, string> = {
+  "门锁": "🔐", "指纹": "🔐", "人脸": "🔐", "猫眼": "🔐",
+  "摄像头": "📷", "摄像": "📷",
+  "网关": "🌐", "中枢": "🌐",
+  "传感器": "📡", "门磁": "📡", "人体": "🚶", "温湿度": "🌡️", "水浸": "💧", "烟雾": "🔥",
+  "灯": "💡", "吸顶灯": "💡", "灯带": "🌈", "灯泡": "💡",
+  "窗帘": "🪟", "卷帘": "🪟",
+  "适配器": "🔌", "中继器": "📶",
+};
+
+const COLOR_MAP = [
+  "from-indigo-50 to-blue-100",
+  "from-rose-50 to-pink-100",
+  "from-amber-50 to-yellow-100",
+  "from-emerald-50 to-teal-100",
+  "from-violet-50 to-purple-100",
+  "from-cyan-50 to-sky-100",
+  "from-orange-50 to-red-100",
+  "from-lime-50 to-green-100",
+];
+
+function getEmoji(name: string) {
+  for (const [k, v] of Object.entries(EMOJI_MAP)) {
+    if (name.includes(k)) return v;
+  }
+  return "📦";
+}
+
+function getGradient(id: number) {
+  return COLOR_MAP[id % COLOR_MAP.length];
 }
 
 export default function ProductCard({
@@ -16,37 +47,45 @@ export default function ProductCard({
   onDetail: (p: Product) => void;
   onAddCart: (p: Product) => void;
 }) {
+  const emoji = getEmoji(product.name);
+  const gradient = getGradient(product.id);
+
   return (
-    <div className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
-      <div className="aspect-square bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center text-5xl">
-        {product.image_url ? (
-          <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
-        ) : (
-          "📦"
+    <div className="card-hover bg-white rounded-2xl overflow-hidden border border-gray-50 cursor-pointer group">
+      <div
+        className={`aspect-[4/3] bg-gradient-to-br ${gradient} flex items-center justify-center text-6xl relative overflow-hidden`}
+        onClick={() => onDetail(product)}
+      >
+        <span className="transition-transform duration-300 group-hover:scale-110">{emoji}</span>
+        {product.stock <= 15 && (
+          <span className="absolute top-3 left-3 px-2.5 py-1 bg-white/90 backdrop-blur rounded-full text-[10px] font-bold text-[#e94560] shadow-sm">
+            仅剩 {product.stock} 件
+          </span>
         )}
+        <div className="card-accent absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1a1a2e] to-[#e94560]" />
       </div>
       <div className="p-4">
         <h3
-          className="font-semibold text-gray-800 mb-1 cursor-pointer hover:text-blue-600 line-clamp-1"
+          className="font-bold text-[#1a1a2e] mb-1 line-clamp-1 text-[15px] group-hover:text-[#e94560] transition-colors"
           onClick={() => onDetail(product)}
         >
           {product.name}
         </h3>
         {product.description && (
-          <p className="text-xs text-gray-400 mb-2 line-clamp-2">{product.description}</p>
+          <p className="text-xs text-gray-400 mb-3 line-clamp-2 leading-relaxed">{product.description}</p>
         )}
         <div className="flex items-center justify-between">
-          <span className="text-lg font-bold text-amber-600">¥{product.price}</span>
+          <div>
+            <span className="text-xs text-gray-400">¥</span>
+            <span className="text-xl font-extrabold text-[#1a1a2e]">{product.price}</span>
+          </div>
           <button
-            onClick={() => onAddCart(product)}
-            className="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors"
+            onClick={(e) => { e.stopPropagation(); onAddCart(product); }}
+            className="px-4 py-2 bg-[#1a1a2e] text-white text-xs font-semibold rounded-xl hover:bg-[#e94560] transition-all duration-300 active:scale-95 shadow-sm hover:shadow-md"
           >
             加入购物车
           </button>
         </div>
-        {product.stock <= 10 && (
-          <p className="text-xs text-red-400 mt-1">仅剩 {product.stock} 件</p>
-        )}
       </div>
     </div>
   );
