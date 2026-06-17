@@ -7,6 +7,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY rag/ ./rag/
 COPY model/ ./model/
 COPY retriever/ ./retriever/
+COPY agent/ ./agent/
 COPY api/ ./api/
 COPY rag_resource/ ./rag_resource/
 COPY .env ./

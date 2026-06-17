@@ -84,4 +84,11 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question }),
     }).then((r) => r.json()),
+
+  agentChat: (messages: { role: string; content: string }[], userToken: string) =>
+    fetch(`${RAG_BASE}/api/agent/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages, user_token: userToken }),
+    }).then((r) => r.json()),
 };

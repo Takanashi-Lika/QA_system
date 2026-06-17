@@ -53,6 +53,7 @@ services:
       - RETRIEVER_MODE=${RETRIEVER_MODE:-hybrid}
       - RETRIEVER_RRF_K=${RETRIEVER_RRF_K:-60}
       - API_PORT=8000
+      - SHOP_SERVICE_URL=http://shop-service:8001
     ports:
       - "8000:8000"
     volumes:
