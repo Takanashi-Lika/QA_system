@@ -134,7 +134,8 @@ class UnifiedAgent:
         self._client = OpenAI(
             api_key=os.getenv("MODEL_API_KEY", ""),
             base_url=os.getenv("MODEL_BASE_URL", "https://api.deepseek.com/v1"),
-            timeout=float(os.getenv("MODEL_TIMEOUT", "60")),
+            timeout=float(os.getenv("MODEL_TIMEOUT", "120")),
+            http_client=httpx.Client(proxy=None),
         )
         self._model = os.getenv("MODEL_NAME", "deepseek-chat")
         self._pipeline = None

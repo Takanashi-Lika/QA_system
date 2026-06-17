@@ -1,12 +1,12 @@
-"""应用层 — Agent 智能购物助手
+"""应用层 — Agent 统一智能助手
 
-通过自然语言驱动后端 API：商品搜索、加入购物车、下单、支付。
-基于 LangChain 工具调用（function calling），LLM 自动编排多步骤操作。
+FAQ检索 + 购物操作，AI自动判断使用哪个工具。
+基于 OpenAI 原生 function calling（tools API），零第三方依赖。
 
 公开接口:
-    ShoppingAgent  — 购物 Agent，接收用户消息 + JWT token，返回工具调用结果
+    UnifiedAgent  — 统一 Agent，接收聊天消息 + JWT token
 """
 
-from .agent import ShoppingAgent
+from .unified_agent import UnifiedAgent
 
-__all__ = ["ShoppingAgent"]
+__all__ = ["UnifiedAgent"]
