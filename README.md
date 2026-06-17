@@ -95,11 +95,15 @@ docker compose ps
 
 ### 4. 运行端到端测试
 
+测试脚本只需要一个库 `httpx`：
+
 ```bash
 cd shop-service
-pip install -r requirements.txt
+pip install httpx
 python test_shop.py
 ```
+
+> **说明：** 测试脚本是你电脑上的 HTTP 客户端，向容器里的服务发请求。它只需要 `httpx`。`requirements.txt` 里的其他依赖（fastapi、psycopg2、redis…）是给容器内用的，本地不需要。
 
 期待输出：
 
@@ -115,12 +119,17 @@ python test_shop.py
 ============================================================
 ```
 
-### 5. 打开 API 文档
+### 5. 启动前端（可选）
 
-| 服务 | Swagger UI |
-|------|-----------|
-| 电商服务 | **http://localhost/docs** |
-| RAG 智能客服 | **http://localhost:8000/docs** |
+如果需要可视化界面，启动前端：
+
+```bash
+cd shop-frontend
+npm install
+npm run dev
+```
+
+浏览器打开 **http://localhost:5173**，即可看到商品浏览、购物车、下单、AI 客服界面。
 
 ---
 
@@ -149,12 +158,7 @@ curl -X POST http://localhost/api/ai/search \
   -d '{"question":"摄像头怎么安装"}'
 ```
 
-也可以通过 Nginx 统一入口：
-```bash
-curl -X POST http://localhost/api/ai/chat \
-  -H "Content-Type: application/json" \
-  -d '{"question":"售后怎么申请"}'
-```
+也可以通过 Nginx 统一入口访问（`:8080/api/ai/chat`），效果相同。
 
 ---
 
@@ -162,12 +166,12 @@ curl -X POST http://localhost/api/ai/chat \
 
 ```bash
 # 1. 注册用户
-curl -X POST http://localhost/c-endpoint/register \
+curl -X POST http://localhost:8001/c-endpoint/register \
   -H "Content-Type: application/json" \
   -d '{"email":"test@test.com","password":"123456","nickname":"张三"}'
 
 # 2. 登录
-curl -X POST http://localhost/c-endpoint/login \
+curl -X POST http://localhost:8001/c-endpoint/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@test.com","password":"123456"}'
 
@@ -175,16 +179,16 @@ curl -X POST http://localhost/c-endpoint/login \
 TOKEN="eyJhbGci..."
 
 # 4. 查看热门商品
-curl http://localhost/c-endpoint/products/hot
+curl http://localhost:8001/c-endpoint/products/hot
 
 # 5. 加入购物车
-curl -X POST http://localhost/c-endpoint/cart/ \
+curl -X POST http://localhost:8001/c-endpoint/cart/ \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"product_id":1,"quantity":2}'
 
 # 6. 下单
-curl -X POST http://localhost/c-endpoint/orders/ \
+curl -X POST http://localhost:8001/c-endpoint/orders/ \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"address":"广东省深圳市南山区"}'
@@ -194,7 +198,7 @@ curl -X POST http://localhost/c-endpoint/orders/1/pay \
   -H "Authorization: Bearer $TOKEN"
 
 # 8. 查物流
-curl "http://localhost/c-endpoint/logistics?order_id=1" \
+curl "http://localhost:8001/c-endpoint/logistics?order_id=1" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -375,9 +379,14 @@ docker compose up -d
 </details>
 
 <details>
-<summary><b>Windows 端口 80 被占用？</b></summary>
+<summary><b>测试脚本连不上服务？</b></summary>
 
-修改 `docker-compose.yml` 中 nginx 的端口映射：`"8080:80"`。
+`test_shop.py` 直连 `localhost:8001`。确认 shop-service 容器已启动且端口映射正常：
+```bash
+docker compose ps | grep shop-service
+# 应看到 0.0.0.0:8001->8001/tcp
+```
+如果端口映射丢失，重新启动：`docker compose down && docker compose up -d`。
 </details>
 
 <details>

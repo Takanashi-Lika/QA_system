@@ -63,7 +63,7 @@ def get_cart(user_id):
     with get_cursor() as cur:
         cur.execute(
             """
-            SELECT ci.id, ci.user_id, ci.product_id, ci.quantity, ci.created_at, ci.updated_at,
+            SELECT ci.id, ci.user_id, ci.product_id, ci.quantity, ci.created_at,
                    p.name AS product_name, p.price, p.stock, p.status
             FROM cart_items ci
             JOIN products p ON ci.product_id = p.id

@@ -217,6 +217,7 @@ def get_order_list(user_id, status=None, page=1, size=20):
                 """,
                 (user_id, status, size, offset),
             )
+            rows = cur.fetchall()
             cur.execute(
                 "SELECT COUNT(*) AS total FROM orders WHERE user_id = %s AND status = %s",
                 (user_id, status),
@@ -232,12 +233,12 @@ def get_order_list(user_id, status=None, page=1, size=20):
                 """,
                 (user_id, size, offset),
             )
+            rows = cur.fetchall()
             cur.execute(
                 "SELECT COUNT(*) AS total FROM orders WHERE user_id = %s",
                 (user_id,),
             )
 
-        rows = cur.fetchall()
         total = cur.fetchone()["total"]
 
     orders = []

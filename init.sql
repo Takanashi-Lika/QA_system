@@ -177,7 +177,7 @@ CREATE INDEX idx_messages_conv ON customer_service.messages(conversation_id, tur
 INSERT INTO shop.users (email, password, nickname, role)
 VALUES (
     'admin@shop.local',
-    '$2b$12$LJ3m4ys3Lk0TSwHBZRQjxO3FvMDJBCJhCqXYaVQYv9XZH0WjFqFdK',
+    '$2b$12$r64TPhy01JNT0M69w7If3uDAxnQPxIu6UWFE99IgrqI/2X5UeW2xC',
     'Admin',
     'admin'
 );

@@ -1,7 +1,8 @@
-import sys, os, json
+import sys, os, json, time
 import httpx
 
 BASE_URL = os.getenv("SHOP_URL", "http://localhost:8001")
+TEST_EMAIL = f"test_{int(time.time())}@test.com"
 
 
 def assert_eq(actual, expected, msg=""):
@@ -30,21 +31,21 @@ def test_health():
 def test_auth():
     print("1. 用户注册...")
     resp = httpx.post(f"{BASE_URL}/c-endpoint/register", json={
-        "email": "test@test.com", "password": "123456", "nickname": "测试用户"
+        "email": TEST_EMAIL, "password": "123456", "nickname": "测试用户"
     })
     assert_status(resp, 200, "register")
     assert_code(resp, 0, "register")
 
     print("   重复注册...")
     resp = httpx.post(f"{BASE_URL}/c-endpoint/register", json={
-        "email": "test@test.com", "password": "123456", "nickname": "测试用户2"
+        "email": TEST_EMAIL, "password": "123456", "nickname": "测试用户2"
     })
     assert_status(resp, 400, "duplicate register")
     assert_code(resp, 40001, "duplicate register")
 
     print("2. 用户登录...")
     resp = httpx.post(f"{BASE_URL}/c-endpoint/login", json={
-        "email": "test@test.com", "password": "123456"
+        "email": TEST_EMAIL, "password": "123456"
     })
     assert_status(resp, 200, "login")
     assert_code(resp, 0, "login")
@@ -54,7 +55,7 @@ def test_auth():
 
     print("   错误密码登录...")
     resp = httpx.post(f"{BASE_URL}/c-endpoint/login", json={
-        "email": "test@test.com", "password": "wrongpass"
+        "email": TEST_EMAIL, "password": "wrongpass"
     })
     assert_status(resp, 401, "wrong password")
     assert_code(resp, 40101, "wrong password")
@@ -68,7 +69,7 @@ def test_user_profile(token):
 
     resp = httpx.get(f"{BASE_URL}/c-endpoint/me", headers=headers)
     assert_status(resp, 200, "get profile")
-    assert resp.json()["data"]["email"] == "test@test.com"
+    assert resp.json()["data"]["email"] == TEST_EMAIL
 
     print("   更新地址...")
     resp = httpx.put(f"{BASE_URL}/c-endpoint/address", json={"address": "广东省深圳市南山区"}, headers=headers)
@@ -96,7 +97,11 @@ def test_products():
     print("   商品列表...")
     resp = httpx.get(f"{BASE_URL}/c-endpoint/products")
     assert_status(resp, 200, "product list")
-    items = resp.json()["data"].get("items", [])
+    data = resp.json()["data"]
+    if isinstance(data, list):
+        items = data
+    else:
+        items = data.get("items", [])
     print(f"   商品列表: {len(items)} 条")
     product_id = items[0]["id"] if items else 1
 
@@ -207,6 +212,9 @@ def test_after_sale(token, order_id):
 def test_cancel_order(token):
     print("11. 取消订单...")
     headers = {"Authorization": f"Bearer {token}"}
+
+    resp = httpx.post(f"{BASE_URL}/c-endpoint/cart/", json={"product_id": 1, "quantity": 1}, headers=headers)
+    assert_status(resp, 200, "add to cart for cancel")
 
     resp = httpx.post(f"{BASE_URL}/c-endpoint/orders/", json={"address": "北京市朝阳区"}, headers=headers)
     assert_status(resp, 200, "create for cancel")

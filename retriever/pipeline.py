@@ -62,7 +62,17 @@ class RetrieverPipeline:
         try:
             answer = self._model.chat(messages)
         except Exception:
-            answer = "抱歉，AI服务暂时不可用。以下是检索到的FAQ参考信息，供您查看。"
+            fallback_parts = []
+            for i, r in enumerate(results[:3], 1):
+                product = r["metadata"].get("product", "")
+                q = r["metadata"].get("question", "")
+                a = ""
+                content = r.get("content", "")
+                if "\n回答: " in content:
+                    a = content.split("\n回答: ", 1)[1]
+                fallback_parts.append(f"{i}.【{product}】问：{q}\n   答：{a}")
+            fallback_text = "\n\n".join(fallback_parts)
+            answer = f"（AI 模型未配置 API Key，以下为 FAQ 知识库检索结果）\n\n{fallback_text}"
 
         sources = [
             {
