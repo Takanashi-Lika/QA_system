@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from retriever import RetrieverPipeline
-from agent import ShoppingAgent
+from agent.unified_agent import UnifiedAgent
 
 
 class SearchRequest(BaseModel):
@@ -18,12 +18,12 @@ class SearchResponse(BaseModel):
     sources: list[dict]
 
 
-class AgentChatRequest(BaseModel):
+class UnifiedChatRequest(BaseModel):
     messages: list[dict]
     user_token: str = ""
 
 
-class AgentChatResponse(BaseModel):
+class UnifiedChatResponse(BaseModel):
     response: str
     tool_calls: list[dict] = []
 
@@ -31,8 +31,8 @@ class AgentChatResponse(BaseModel):
 def create_app() -> FastAPI:
     app = FastAPI(
         title="RAG 智能客服 API",
-        version="1.1.0",
-        description="FAQ 知识库检索 + LLM 生成回复 + Agent 智能购物",
+        version="1.2.0",
+        description="统一智能对话：FAQ检索 + Agent购物 + LLM自动选工具",
     )
 
     app.add_middleware(
@@ -67,15 +67,10 @@ def create_app() -> FastAPI:
         s = pipeline._store.get_stats()
         return s
 
-    @app.post("/api/agent/chat", response_model=AgentChatResponse)
-    def agent_chat(body: AgentChatRequest):
-        if not body.user_token:
-            return AgentChatResponse(
-                response="请先在商城登录，然后将 JWT Token 粘贴到输入框上方的「用户Token」栏。没有 Token 无法操作购物车和下单哦。",
-                tool_calls=[],
-            )
-        agent = ShoppingAgent(body.user_token)
+    @app.post("/api/chat/unified", response_model=UnifiedChatResponse)
+    def unified_chat(body: UnifiedChatRequest):
+        agent = UnifiedAgent(body.user_token)
         result = agent.chat(body.messages)
-        return AgentChatResponse(**result)
+        return UnifiedChatResponse(**result)
 
     return app

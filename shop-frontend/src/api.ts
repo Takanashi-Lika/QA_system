@@ -91,4 +91,11 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ messages, user_token: userToken }),
     }).then((r) => r.json()),
+
+  unifiedChat: (messages: { role: string; content: string }[], userToken: string) =>
+    fetch(`${RAG_BASE}/api/chat/unified`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages, user_token: userToken }),
+    }).then((r) => r.json()),
 };
