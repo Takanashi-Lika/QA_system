@@ -115,6 +115,10 @@ export default function App() {
 
       <CartDrawer open={cartOpen} items={cartItems} total={cartTotal} onClose={() => setCartOpen(false)} onUpdateQty={updateQty} onRemove={removeFromCart} onCheckout={checkout} />
       {detailProduct && <ProductDetail product={detailProduct} cartItems={cartItems} onClose={() => setDetailProduct(null)} onAddCart={addToCart} onUpdateQty={updateQty} />}
+
+      <footer className="text-center py-8 text-xs text-gray-400">
+        © 2026 智居商城 — 基于 FastAPI + React + PostgreSQL + Redis + RAG 智能客服 · 演示项目
+      </footer>
     </div>
   );
 }

@@ -103,6 +103,35 @@ def search_products(keyword, page=1, size=20):
     }
 
 
+def list_all_products(page=1, size=24):
+    offset = (page - 1) * size
+
+    with get_cursor() as cur:
+        cur.execute("SELECT count(*) AS total FROM products WHERE status = 'on_sale'")
+        total = cur.fetchone()["total"]
+
+        cur.execute(
+            """
+            SELECT p.id, p.name, p.description, p.price, p.image_url, p.stock,
+                   p.category_id, c.name AS category_name, p.status, p.created_at, p.updated_at
+            FROM products p
+            LEFT JOIN categories c ON p.category_id = c.id
+            WHERE p.status = 'on_sale'
+            ORDER BY p.created_at DESC
+            LIMIT %s OFFSET %s
+            """,
+            (size, offset),
+        )
+        rows = cur.fetchall()
+
+    return {
+        "total": total,
+        "page": page,
+        "size": size,
+        "items": [dict(row) for row in rows],
+    }
+
+
 def get_product_detail(product_id):
     cache_key = f"product:{product_id}"
 

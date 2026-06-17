@@ -4,6 +4,7 @@ from domain.product.product_service import (
     get_hot_products,
     get_products_by_category,
     search_products,
+    list_all_products,
     get_product_detail,
 )
 
@@ -27,7 +28,7 @@ def list_products(
     elif category_id:
         result = get_products_by_category(category_id, page, size)
     else:
-        result = get_hot_products()
+        result = list_all_products(page, size)
     return {"code": 0, "message": "ok", "data": result}
 
 
