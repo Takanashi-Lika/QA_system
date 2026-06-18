@@ -205,14 +205,14 @@ SELECT setval('shop.categories_id_seq', 16);
 
 -- 5.3 Products (25 on_sale products)
 INSERT INTO shop.products (name, description, price, image_url, stock, category_id, status) VALUES
-    ('X1 智能指纹门锁',        '高端指纹识别门锁，支持APP远程开锁，0.3秒快速识别',             1299.00, '',     50, 7, 'on_sale'),
-    ('X2 3D人脸识别门锁',      '3D结构光人脸识别，防照片/视频攻击，全自动锁体',              2599.00, '',     30, 8, 'on_sale'),
-    ('X3 智能猫眼门锁',        '1080P猫眼摄像头+指纹锁二合一，门外画面实时查看',            1899.00, '',     25, 8, 'on_sale'),
-    ('C1 智能室内摄像头',      '2K高清画质，双向语音通话，AI人形检测，360°旋转',              329.00, '',     80, 9, 'on_sale'),
+    ('X1 智能指纹门锁',        '高端指纹识别门锁，支持APP远程开锁，0.3秒快速识别',             1299.00, '/products/x1-fingerprint-lock.png',     50, 7, 'on_sale'),
+    ('X2 3D人脸识别门锁',      '3D结构光人脸识别，防照片/视频攻击，全自动锁体',              2599.00, '/products/x2-face-lock.png',     30, 8, 'on_sale'),
+    ('X3 智能猫眼门锁',        '1080P猫眼摄像头+指纹锁二合一，门外画面实时查看',            1899.00, '/products/x3-cat-eye-lock.png',     25, 8, 'on_sale'),
+    ('C1 智能室内摄像头',      '2K高清画质，双向语音通话，AI人形检测，360°旋转',              329.00, '/products/c1-indoor-camera.png',     80, 9, 'on_sale'),
     ('C2 智能室外摄像头',      'IP66防水防尘，全彩夜视，AI区域报警，4K超清',                    599.00, '',     40, 10, 'on_sale'),
     ('C3 迷你无线摄像头',      '磁吸安装，电池供电，PIR人体感应，1080P高清',                    199.00, '',     100, 9, 'on_sale'),
-    ('G1 智能家庭网关',        'Zigbee 3.0协议，最大连接128个设备，支持HomeKit',              599.00, '',     35, 3, 'on_sale'),
-    ('G2 智能中枢网关',        'Wi-Fi 6 + Zigbee + BLE Mesh三模，本地AI引擎',               1299.00, '',     15, 3, 'on_sale'),
+    ('G1 智能家庭网关',        'Zigbee 3.0协议，最大连接128个设备，支持HomeKit',              599.00, '/products/g1-home-gateway.png',     35, 3, 'on_sale'),
+    ('G2 智能中枢网关',        'Wi-Fi 6 + Zigbee + BLE Mesh三模，本地AI引擎',               1299.00, '/products/g2-hub-gateway.png',     15, 3, 'on_sale'),
     ('D1 吸顶灯 客厅版',       '智能吸顶灯，无极调光调色，支持语音控制，适用20-30㎡',          499.00, '',     30, 12, 'on_sale'),
     ('D2 吸顶灯 卧室版',       '智能吸顶灯，无极调光调色，定时开关，适用10-15㎡',              299.00, '',     40, 12, 'on_sale'),
     ('D3 智能灯带 2米',        'RGB全彩灯带，音乐律动模式，APP控制，背面自带背胶',             129.00, '',     80, 13, 'on_sale'),

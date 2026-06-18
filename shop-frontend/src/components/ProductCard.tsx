@@ -4,6 +4,7 @@ interface Product {
   price: number;
   stock: number;
   description?: string;
+  image_url?: string;
 }
 
 const EMOJI_MAP: Record<string, string> = {
@@ -38,6 +39,17 @@ function getGradient(id: number) {
   return COLOR_MAP[id % COLOR_MAP.length];
 }
 
+function getImageUrl(product: Product) {
+  if (product.image_url) return product.image_url;
+  if (product.name.includes("X1 智能指纹门锁")) return "/products/x1-fingerprint-lock.png";
+  if (product.name.includes("X2") && product.name.includes("人脸")) return "/products/x2-face-lock.png";
+  if (product.name.includes("X3") && product.name.includes("猫眼")) return "/products/x3-cat-eye-lock.png";
+  if (product.name.includes("C1") && product.name.includes("摄像头")) return "/products/c1-indoor-camera.png";
+  if (product.name.includes("G1") && product.name.includes("网关")) return "/products/g1-home-gateway.png";
+  if (product.name.includes("G2") && product.name.includes("网关")) return "/products/g2-hub-gateway.png";
+  return "";
+}
+
 export default function ProductCard({
   product,
   onDetail,
@@ -49,6 +61,7 @@ export default function ProductCard({
 }) {
   const emoji = getEmoji(product.name);
   const gradient = getGradient(product.id);
+  const imageUrl = getImageUrl(product);
 
   return (
     <div className="card-hover bg-white rounded-2xl overflow-hidden border border-gray-50 cursor-pointer group">
@@ -56,7 +69,15 @@ export default function ProductCard({
         className={`aspect-[4/3] bg-gradient-to-br ${gradient} flex items-center justify-center text-6xl relative overflow-hidden`}
         onClick={() => onDetail(product)}
       >
-        <span className="transition-transform duration-300 group-hover:scale-110">{emoji}</span>
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={product.name}
+            className="w-full h-full object-contain p-5 transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <span className="transition-transform duration-300 group-hover:scale-110">{emoji}</span>
+        )}
         {product.stock <= 15 && (
           <span className="absolute top-3 left-3 px-2.5 py-1 bg-white/90 backdrop-blur rounded-full text-[10px] font-bold text-[#e94560] shadow-sm">
             仅剩 {product.stock} 件

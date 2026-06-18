@@ -4,6 +4,7 @@ interface Product {
   price: number;
   stock: number;
   description?: string;
+  image_url?: string;
 }
 
 interface CartItem {
@@ -31,6 +32,17 @@ function getEmoji(name: string) {
   return "📦";
 }
 
+function getImageUrl(product: Product) {
+  if (product.image_url) return product.image_url;
+  if (product.name.includes("X1 智能指纹门锁")) return "/products/x1-fingerprint-lock.png";
+  if (product.name.includes("X2") && product.name.includes("人脸")) return "/products/x2-face-lock.png";
+  if (product.name.includes("X3") && product.name.includes("猫眼")) return "/products/x3-cat-eye-lock.png";
+  if (product.name.includes("C1") && product.name.includes("摄像头")) return "/products/c1-indoor-camera.png";
+  if (product.name.includes("G1") && product.name.includes("网关")) return "/products/g1-home-gateway.png";
+  if (product.name.includes("G2") && product.name.includes("网关")) return "/products/g2-hub-gateway.png";
+  return "";
+}
+
 export default function ProductDetail({
   product,
   cartItems,
@@ -45,6 +57,7 @@ export default function ProductDetail({
   onUpdateQty: (id: number, qty: number) => void;
 }) {
   const inCart = cartItems.find((c) => c.product_id === product.id);
+  const imageUrl = getImageUrl(product);
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center animate-fade-in" onClick={onClose}>
@@ -52,7 +65,11 @@ export default function ProductDetail({
         <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center text-gray-500 hover:text-[#1a1a2e] z-10 transition-colors text-lg">&times;</button>
 
         <div className="aspect-video bg-gradient-to-br from-indigo-50 via-rose-50 to-amber-50 flex items-center justify-center text-8xl relative">
-          <span className="animate-float" style={{ animationDuration: "3s" }}>{getEmoji(product.name)}</span>
+          {imageUrl ? (
+            <img src={imageUrl} alt={product.name} className="w-full h-full object-contain p-8" />
+          ) : (
+            <span className="animate-float" style={{ animationDuration: "3s" }}>{getEmoji(product.name)}</span>
+          )}
         </div>
 
         <div className="p-8">
