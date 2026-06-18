@@ -40,6 +40,18 @@ function getImageUrl(product: Product) {
   if (product.name.includes("C1") && product.name.includes("摄像头")) return "/products/c1-indoor-camera.png";
   if (product.name.includes("G1") && product.name.includes("网关")) return "/products/g1-home-gateway.png";
   if (product.name.includes("G2") && product.name.includes("网关")) return "/products/g2-hub-gateway.png";
+  if (product.name.includes("D1") && product.name.includes("吸顶灯")) return "/products/d1-living-ceiling-light.png";
+  if (product.name.includes("D2") && product.name.includes("吸顶灯")) return "/products/d2-bedroom-ceiling-light.png";
+  if (product.name.includes("D3") && product.name.includes("灯带")) return "/products/d3-smart-light-strip.png";
+  if (product.name.includes("D4") && product.name.includes("床头灯")) return "/products/d4-bedside-lamp.png";
+  if (product.name.includes("Z1") && product.name.includes("窗帘")) return "/products/z1-curtain-motor.png";
+  if (product.name.includes("Z2") && product.name.includes("卷帘")) return "/products/z2-roller-motor.png";
+  if (product.name.includes("T1") && product.name.includes("门窗")) return "/products/t1-door-window-sensor.png";
+  if (product.name.includes("T2") && product.name.includes("人体")) return "/products/t2-motion-sensor.png";
+  if (product.name.includes("T3") && product.name.includes("温湿度")) return "/products/t3-temp-humidity-sensor.png";
+  if (product.name.includes("T4") && product.name.includes("水浸")) return "/products/t4-water-leak-sensor.png";
+  if (product.name.includes("T5") && product.name.includes("烟雾")) return "/products/t5-smoke-alarm.png";
+  if (product.name.includes("P1") && product.name.includes("适配器")) return "/products/p1-gateway-power-adapter.png";
   return "";
 }
 
